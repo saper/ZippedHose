@@ -50,6 +50,7 @@ $offset = 0;
 $centralsize = 0;
 
 $statlist = statfiles($list);
+$map = array();
 $directory = array();
 
 foreach($statlist as $fstat) {
@@ -57,13 +58,22 @@ foreach($statlist as $fstat) {
 	$central = dirmapentry($centralsize,
 		centralheader($fstat, $offset, null));
 
+	array_push($map, $mapentry);
 	$offset = advance($offset, $mapentry);
-	$centralsize = advance($centralsize, $central);
-	array_push($directory, $central);
 
-	push($mapentry);
+	$filedata = filemapentry($offset, $fstat);
+	array_push($map, $filedata);
+	$offset = advance($offset, $filedata);
+
+	array_push($directory, $central);
+	$centralsize = advance($centralsize, $central);
 }
 
 $centraloffset = $offset;
-array_walk($directory, "push");
-print endcentral($centraloffset, $centralsize, count($statlist));
+array_push($directory, dirmapentry($centralsize,
+	endcentral($centraloffset, $centralsize, count($statlist))));
+
+foreach($directory as $direntry) {
+	array_push($map, pin($direntry, $centraloffset));
+}
+array_walk($map, "dump"); 

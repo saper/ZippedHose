@@ -16,12 +16,28 @@ function dirmapentry($offset, $content) {
 function advance($offset, $mapentry) {
 	return $offset + $mapentry[1];
 }
+function pin($dirmapentry, $offset) {
+	return array($offset + $dirmapentry[0], $dirmapentry[1], 0, $dirmapentry[3]);
+}
 function push($mapentry) {
 	switch ($mapentry[2]) {
 	case 0:
 	case 2:
 		print $mapentry[3];
 	}
+}
+function dump($mapentry) {
+	printf("%08X %08X %08X ", $mapentry[0], $mapentry[0] + $mapentry[1], $mapentry[1]);
+	switch ($mapentry[2]) {
+	case 0:
+	case 2:
+		$a = unpack("V", substr($mapentry[3], 0, 4));
+		printf("%08x", $a[1]);
+		break;
+	case 1:
+		print $mapentry[3][0];
+	}
+	print "\n";
 }
 
 function coreheader($fstat, $extra) {
