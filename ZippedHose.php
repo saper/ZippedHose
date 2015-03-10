@@ -1,12 +1,5 @@
 <?php
 
-function statone($f) {
-	 stat($f);
-	$s['filename'] = $f;
-	print_r($s);
-	return $s;
-}
-
 function statfiles($filelist) {
 	return array_map(null, $filelist, array_map('stat', $filelist));
 }
