@@ -11,6 +11,26 @@ function statfiles($filelist) {
 	return array_map(null, $filelist, array_map('stat', $filelist));
 }
 
+function absolutemapentry($offset, $content) {
+	return array($offset, strlen($content), 0, $content);
+}
+function filemapentry($offset, $fstat) {
+	return array($offset, $fstat[1]['size'], 1, $fstat);
+}
+function dirmapentry($offset, $content) {
+	return array($offset, strlen($content), 2, $content);
+}
+function advance($offset, $mapentry) {
+	return $offset + $mapentry[1];
+}
+function push($mapentry) {
+	switch ($mapentry[2]) {
+	case 0:
+	case 2:
+		print $mapentry[3];
+	}
+}
+
 function coreheader($fstat, $extra) {
 	return pack("v5V3v2",
 			10, /* 20 for dir, 45 for zip64 */
@@ -32,7 +52,7 @@ function localheader($fstat, $extra) {
 		$extra;
 }
 
-function centralheader($fstat, $extra) {
+function centralheader($fstat, $offset, $extra) {
 	return pack("Vv",
 			0x02014b50,
 			0x0000) . /* Version */
@@ -42,10 +62,11 @@ function centralheader($fstat, $extra) {
 			0x0000,    /* disk number start */
 			0x0000,    /* internal file attributes */
 			0x0000,    /* external file attributes */
-			0x00000000) .      /* localheader relative offset */
+			$offset) .      /* localheader relative offset */
 		$fstat[0] .
 		$extra;
 }
+
 function endcentral($centraloffset, $centralsize, $entries) {
 	return pack("Vv4V2v",
 			0x06054b50,

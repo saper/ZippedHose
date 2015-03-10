@@ -47,19 +47,23 @@ $list = array(
 );
 
 $offset = 0;
-$centraloffset = 0;
 $centralsize = 0;
+
 $statlist = statfiles($list);
+$directory = array();
+
 foreach($statlist as $fstat) {
-	$lh = localheader($fstat, null);
-	$offset += strlen($lh);
-	print $lh;
+	$mapentry = absolutemapentry($offset, localheader($fstat, null));
+	$central = dirmapentry($centralsize,
+		centralheader($fstat, $offset, null));
+
+	$offset = advance($offset, $mapentry);
+	$centralsize = advance($centralsize, $central);
+	array_push($directory, $central);
+
+	push($mapentry);
 }
 
 $centraloffset = $offset;
-foreach($statlist as $fstat) {
-	$ch = centralheader($fstat, null);
-	$centralsize += strlen($ch);
-	print $ch;
-}
+array_walk($directory, "push");
 print endcentral($centraloffset, $centralsize, count($statlist));
