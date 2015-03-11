@@ -54,19 +54,22 @@ $map = array();
 $directory = array();
 
 foreach($statlist as $fstat) {
-	$mapentry = absolutemapentry($offset, localheader($fstat, null));
-	$central = dirmapentry($centralsize,
-		centralheader($fstat, $offset, null));
+	$lh = localheader($fstat, null);
+	if ($lh !== null) {
+		$mapentry = absolutemapentry($offset, $lh);
+		$central = dirmapentry($centralsize,
+			centralheader($fstat, $offset, null));
 
-	array_push($map, $mapentry);
-	$offset = advance($offset, $mapentry);
+		array_push($map, $mapentry);
+		$offset = advance($offset, $mapentry);
 
-	$filedata = filemapentry($offset, $fstat);
-	array_push($map, $filedata);
-	$offset = advance($offset, $filedata);
+		$filedata = filemapentry($offset, $fstat);
+		array_push($map, $filedata);
+		$offset = advance($offset, $filedata);
 
-	array_push($directory, $central);
-	$centralsize = advance($centralsize, $central);
+		array_push($directory, $central);
+		$centralsize = advance($centralsize, $central);
+	}
 }
 
 $centraloffset = $offset;

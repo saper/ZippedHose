@@ -8,7 +8,8 @@ function absolutemapentry($offset, $content) {
 	return array($offset, strlen($content), 0, $content);
 }
 function filemapentry($offset, $fstat) {
-	return array($offset, $fstat[1]['size'], 1, $fstat);
+	$storedsize = is_directory($fstat) ? 0 :  $fstat[1]['size'];
+	return array($offset, $storedsize, 1, $fstat);
 }
 function dirmapentry($offset, $content) {
 	return array($offset, strlen($content), 2, $content);
@@ -24,6 +25,9 @@ function push($mapentry) {
 	case 0:
 	case 2:
 		print $mapentry[3];
+		break;
+	case 1:
+		print pack("x" . $mapentry[1]);
 	}
 }
 function dump($mapentry) {
@@ -40,9 +44,21 @@ function dump($mapentry) {
 	print "\n";
 }
 
+function is_directory($fstat) {
+	return ($fstat[1]["mode"] & 0040000);
+}
 function coreheader($fstat, $extra) {
+	if (($fstat[1]["mode"] & 0140000) === 0) { /* S_IFDIR | S_IFREG */
+		return null;
+	}
+	if (is_directory($fstat)) {
+		$type = 20;
+	} else {
+		$type = 10;
+	}
+
 	return pack("v5V3v2",
-			10, /* 20 for dir, 45 for zip64 */
+			$type,     /* 10 regular file, 20 for dir, 45 for zip64 */
 			0x0000,    /* special purpose */
 			0x0000,    /* no compression */
 			0x0000,    /* mod time  */
@@ -55,8 +71,11 @@ function coreheader($fstat, $extra) {
 }
 
 function localheader($fstat, $extra) {
+	$ch = coreheader($fstat, $extra);
+	if ($ch === null)
+		return null;
 	return pack("V", 0x04034b50) .
-		coreheader($fstat, $extra) .
+		$ch .
 		$fstat[0] .
 		$extra;
 }
