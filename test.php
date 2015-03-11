@@ -79,4 +79,8 @@ array_push($directory, dirmapentry($centralsize,
 foreach($directory as $direntry) {
 	array_push($map, pin($direntry, $centraloffset));
 }
-array_walk($map, "dump"); 
+$DUMPFILE = 1;
+if (isset($DUMPMAP))
+	array_walk($map, "dump"); 
+if (isset($DUMPFILE))
+	array_walk($map, "push"); 
